@@ -36,7 +36,8 @@ func main() {
 	if modpackUpdateAvailable {
 		println("Modpack update available")
 		InstallModpack()
+		println("You may now launch Minecraft!")
+	} else {
+		println("Modpack is already up to date")
 	}
-	//println("Modpack is up to date!")
-
 }

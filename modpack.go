@@ -14,6 +14,21 @@ type Version struct {
 	Version string `json:"version"`
 }
 
+func GetVersionFromApi() (string, error) {
+	// get the latest version from the API
+	resp, err := http.Get("https://hlafaille.xyz/api/data.json")
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+
+	// marshal apiVersion
+	apiVersion := Version{}
+	json.Unmarshal(body, &apiVersion)
+	return apiVersion.Version, nil
+}
+
 // IsModpackUpdateAvailable checks if the modpack has an update available
 func IsModpackUpdateAvailable() (bool, error) {
 	// get the users home directory
@@ -33,19 +48,13 @@ func IsModpackUpdateAvailable() (bool, error) {
 	version := string(etherealVersionText)
 
 	// get the latest version from the API
-	resp, err := http.Get("https://hlafaille.xyz/api/data.json")
+	apiVersion, err := GetVersionFromApi()
 	if err != nil {
 		return false, err
 	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-
-	// marshal apiVersion
-	apiVersion := Version{}
-	json.Unmarshal(body, &apiVersion)
 
 	// if the API version does not equal the local version, return true
-	if apiVersion.Version != version {
+	if apiVersion != version {
 		return true, nil
 	}
 	return false, nil
@@ -55,6 +64,7 @@ func IsModpackUpdateAvailable() (bool, error) {
 func InstallModpack() error {
 	// download the modpack
 	err := DownloadFile("ethereal.tar.gz", "https://hlafaille.xyz/dl/ethereal.tar.gz")
+	println("Modpack update downloaded")
 
 	// extract it
 	cmd := exec.Command("tar", "-xf", "ethereal.tar.gz")
@@ -76,6 +86,12 @@ func InstallModpack() error {
 		return err
 	}
 
+	// create the minecraft mods folder
+	err = os.Mkdir(minecraftDirectory+"/mods", os.ModePerm)
+	if err != nil {
+		return err
+	}
+
 	// read the mods_new folder
 	mods, err := os.ReadDir("mods_new")
 	if err != nil {
@@ -87,5 +103,19 @@ func InstallModpack() error {
 		fmt.Printf("Symlinking '%s' to '%s'\n", "mods_new/"+mod.Name(), minecraftDirectory+"/mods/"+mod.Name())
 		os.Link("mods_new/"+mod.Name(), minecraftDirectory+"/mods/"+mod.Name())
 	}
+
+	// get the user home dir
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+
+	// set the version file
+	newVersion, err := GetVersionFromApi()
+	if err != nil {
+		return err
+	}
+	os.WriteFile(userHomeDir+"/.ethereal/version", []byte(newVersion), os.ModePerm)
+
 	return nil
 }
