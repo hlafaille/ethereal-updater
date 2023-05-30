@@ -7,15 +7,15 @@ import (
 func main() {
 	println(" ---===[ ETHEREAL UPDATER]===--- ")
 	// check if Java 17 is installed
-	javaInstalled, err := IsJavaInstalled()
-	if err != nil {
-		log.Fatal(err)
-	}
+	javaInstalled, _ := IsJavaInstalled()
 
 	// if Java 17 is not installed
 	if !javaInstalled {
 		println("Java 17 not installed")
-		InstallJava()
+		err := InstallJava()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	// check if fabric modloader is installed

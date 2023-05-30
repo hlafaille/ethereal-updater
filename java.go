@@ -45,8 +45,8 @@ func InstallJava() error {
 
 	// begin the installation
 	if runtime.GOOS == "windows" {
-		cmd := exec.Command("java17.exe")
-		cmd.Wait()
+		cmd := exec.Command(".\\java17.exe")
+		cmd.Start()
 		err := cmd.Wait()
 		if err != nil {
 			return err
@@ -54,7 +54,7 @@ func InstallJava() error {
 	} else if runtime.GOOS == "darwin" {
 		// mount the dmg
 		cmd := exec.Command("hdiutil", "attach", "java17.dmg")
-		cmd.Wait()
+		cmd.Start()
 		err := cmd.Wait()
 		if err != nil {
 			return err
@@ -62,7 +62,7 @@ func InstallJava() error {
 
 		// run the macOS installer script
 		cmd = exec.Command("installer", "-package", "'/Volumes/JDK 17.0.7/JDK 17.0.7.pkg'", "-target", "/")
-		cmd.Wait()
+		cmd.Start()
 		err = cmd.Wait()
 		if err != nil {
 			return err
@@ -70,7 +70,7 @@ func InstallJava() error {
 
 		// unmount the dmg
 		cmd = exec.Command("hdiutil", "detach", "'/Volumes/JDK 17.0.7'")
-		cmd.Wait()
+		cmd.Start()
 		err = cmd.Wait()
 		if err != nil {
 			return err
